@@ -73,8 +73,10 @@ export class CoreService<T, R> {
     const p = param_ || {}
     let apiData: any
     const wrapper = p?.wrapper as Wrapper
-    if ((wrapper as Wrapper).constructor.prototype.constructor.isDataWrapper) {
-      p.params = wrapper.processParams?.(p.params)
+    if (wrapper) {
+      if ((wrapper as Wrapper).constructor.prototype.constructor.isDataWrapper) {
+        p.params = wrapper.processParams?.(p.params)
+      }
     }
     try {
       apiData = await this.req(url, {
