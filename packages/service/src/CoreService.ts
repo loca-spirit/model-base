@@ -13,25 +13,27 @@ import { type Wrapper } from './response'
  */
 export type WrapperConstructor<Sub extends Wrapper> = Sub['data']
 
-export type WrapperType<K> = K extends Wrapper
-  ? WrapperConstructor<K>
-  : K extends typeof ModelBase
-  ? InstanceType<K>
+export type WrapperType<U> = U extends Wrapper
+  ? WrapperConstructor<U>
+  : U extends typeof ModelBase
+  ? InstanceType<U>
   : any
 
-export interface IServiceParam<T, K> {
+export interface IServiceParam<T, U> {
   params?: ModelBase | any
   options?: any
   beforeParse?: (dto: any) => any
   beforeDeserialize?: (data: { json: any; snakeJson?: ModelSnakeType<T>; modelJson?: ModelType<T> }) => any
   afterParse?: (serviceResponse: T) => T
   afterDeserialize?: (serviceResponse: T) => T
-  wrapper?: K
+  wrapper?: U
 }
 
-export interface IServiceParamRequest<T, K> extends IServiceParam<T, K> {
+export interface IServiceParamRequest<T, U> extends IServiceParam<T, U> {
   type?: 'get' | 'post' | 'del' | 'put' | 'patch'
 }
+
+export type ServiceResponseType<R, U> = Omit<R, 'data'> & { data: WrapperType<U> }
 
 export class CoreService<T, R> {
   public driver!: Driver
@@ -42,32 +44,32 @@ export class CoreService<T, R> {
     this.serviceResponseType = serviceResponseType
   }
 
-  public get<K>(url: string, data?: IServiceParam<T, K>) {
+  public get<U>(url: string, data?: IServiceParam<T, U>) {
     data = data || {}
-    return this.request(url, { ...data, type: 'get' }) as any as Omit<R, 'data'> & { data: WrapperType<K> }
+    return this.request(url, { ...data, type: 'get' }) as any as Promise<ServiceResponseType<R, U>>
   }
 
-  public post<K>(url: string, data?: IServiceParam<T, K>) {
+  public post<U>(url: string, data?: IServiceParam<T, U>) {
     data = data || {}
-    return this.request(url, { ...data, type: 'post' }) as any as Omit<R, 'data'> & { data: WrapperType<K> }
+    return this.request(url, { ...data, type: 'post' }) as any as Promise<ServiceResponseType<R, U>>
   }
 
-  public del<K>(url: string, data?: IServiceParam<T, K>) {
+  public del<U>(url: string, data?: IServiceParam<T, U>) {
     data = data || {}
-    return this.request(url, { ...data, type: 'del' }) as any as Omit<R, 'data'> & { data: WrapperType<K> }
+    return this.request(url, { ...data, type: 'del' }) as any as Promise<ServiceResponseType<R, U>>
   }
 
-  public put<K>(url: string, data?: IServiceParam<T, K>) {
+  public put<U>(url: string, data?: IServiceParam<T, U>) {
     data = data || {}
-    return this.request(url, { ...data, type: 'put' }) as any as Omit<R, 'data'> & { data: WrapperType<K> }
+    return this.request(url, { ...data, type: 'put' }) as any as Promise<ServiceResponseType<R, U>>
   }
 
-  public patch<K>(url: string, data?: IServiceParam<T, K>) {
+  public patch<U>(url: string, data?: IServiceParam<T, U>) {
     data = data || {}
-    return this.request(url, { ...data, type: 'patch' }) as any as Omit<R, 'data'> & { data: WrapperType<K> }
+    return this.request(url, { ...data, type: 'patch' }) as any as Promise<ServiceResponseType<R, U>>
   }
 
-  public async request<T, K>(url: string, param_?: IServiceParamRequest<T, K>) {
+  public async request<T, U>(url: string, param_?: IServiceParamRequest<T, U>) {
     const p = param_ || {}
     let apiData: any
     const wrapper = p?.wrapper as Wrapper
