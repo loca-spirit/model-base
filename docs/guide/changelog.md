@@ -84,6 +84,9 @@ export type IColumnDeserialize = {
 }
 ```
 
+#### break change `getColumns` 
+- `column` 变更为 `name` 
+
 #### change and feature `name` 和 `aliseName` 支持传入 `camelCase` 风格的名字
 
 - 增加 `strictNameCheck` 和 `strictAliasNameCheck`，设置为 true 后，序列化后强制使用`name` ，初始化强制使用 `aliseName`的名字，和旧的逻辑一致。

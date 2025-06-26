@@ -23,7 +23,7 @@ export function genTypeByValue(value: any) {
 }
 
 export function generateColumnsFromData<T>(model: any, data: any) {
-  const isColInVal= getModelProps(model, 'columnsInValue')
+  const isColInVal = getModelProps(model, 'columnsInValue')
   const keepMn = getModelProps(model, 'keepModelName')
 
   const keys = Object.keys(data)
@@ -191,15 +191,16 @@ export function Column(col?: IColumn): PropertyDecorator {
   return (target: any, context: string | symbol | ClassFieldDecoratorContext<typeof target, any>) => {
     if (target?.constructor) {
       const property = context as string | symbol
+      // 继承关系的时候，需要cloneDeep，否则会污染父类的columns
       const metadata = (target.constructor as any)[Symbol.metadata] || {}
       const columns = metadata[__COLUMNS__] || {}
-      metadata[__COLUMNS__] = initColumn(target, property, columns, params)
+      metadata[__COLUMNS__] = initColumn(target, property, cloneDeep(columns), params)
       ;(target.constructor as any)[Symbol.metadata] = metadata
     } else {
       const property = (context as ClassFieldDecoratorContext<typeof target, any>).name
       const metadata = (context as any).metadata || {}
       const columns = metadata[__COLUMNS__] || {}
-      metadata[__COLUMNS__] = initColumn(metadata, property, columns, params)
+      metadata[__COLUMNS__] = initColumn(metadata, property, cloneDeep(columns), params)
       ;(context as any).metadata = metadata
       // 新版本装饰器和旧版本统一，都不支持属性直接设置默认值。
       // return function (this: any, value: any) {
