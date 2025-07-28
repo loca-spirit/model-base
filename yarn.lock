@@ -3461,7 +3461,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@model-base/common@npm:^1.0.8, @model-base/common@workspace:packages/common":
+"@model-base/common@npm:^1.0.9, @model-base/common@workspace:packages/common":
   version: 0.0.0-use.local
   resolution: "@model-base/common@workspace:packages/common"
   dependencies:
@@ -3470,11 +3470,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@model-base/core@npm:^1.0.8, @model-base/core@workspace:packages/core":
+"@model-base/core@npm:^1.0.9, @model-base/core@workspace:packages/core":
   version: 0.0.0-use.local
   resolution: "@model-base/core@workspace:packages/core"
   dependencies:
-    "@model-base/common": "npm:^1.0.8"
+    "@model-base/common": "npm:^1.0.9"
     deepmerge: "npm:^2.2.1"
     lodash: "npm:^4.17.21"
     patch-package: "npm:^6.4.7"
@@ -3486,7 +3486,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@model-base/service@workspace:packages/service"
   dependencies:
-    "@model-base/core": "npm:^1.0.8"
+    "@model-base/core": "npm:^1.0.9"
     patch-package: "npm:^6.4.7"
     tslib: "npm:^2.8.0"
   languageName: unknown

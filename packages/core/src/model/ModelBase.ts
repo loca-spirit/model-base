@@ -598,7 +598,11 @@ export class ModelBase {
       const columns = this.getColumns(data)
       const metadata = t_.constructor[Symbol.metadata] || {}
       metadata[__COLUMNS_CACHED__] = columns
-      t_.constructor[Symbol.metadata] = metadata
+      if (t_.constructor[Symbol.metadata]) {
+        Object.assign((t_.constructor as any)[Symbol.metadata], metadata)
+      } else {
+        t_.constructor[Symbol.metadata] = metadata
+      }
       ;(t_.constructor as any)[__COLUMNS_CACHED__] = columns
       return columns
     }
