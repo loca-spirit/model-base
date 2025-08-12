@@ -142,12 +142,12 @@ export function modelToSerializableObj<T extends ModelBase>(
       } else if (typeof params.excludeGroup !== 'undefined') {
         if (
           typeof params.excludeGroup === 'string' &&
-          columns[key].group?.indexOf?.(params.excludeGroup) !== -1
+          columns[key].group && columns[key].group?.indexOf?.(params.excludeGroup) !== -1
         ) {
           delete dto[serializeName]
         } else if (
           Array.isArray(params.excludeGroup) &&
-          params.excludeGroup.some((group) => columns[key].group?.indexOf?.(group) !== -1)
+          params.excludeGroup.some((group) =>  columns[key].group && columns[key].group?.indexOf?.(group) !== -1)
         ) {
           delete dto[serializeName]
         }
