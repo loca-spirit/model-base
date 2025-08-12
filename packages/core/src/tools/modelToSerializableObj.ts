@@ -125,7 +125,7 @@ export function modelToSerializableObj<T extends ModelBase>(
           dto[serializeName] = (dto[serializeName] as string).trim()
         }
       }
-
+      // todo 后续可以再兼容group是数组的情况
       // 处理分组的逻辑 begin
       if (typeof params.group !== 'undefined') {
         // console.log('param.group', columns[key].group, param.group)
@@ -135,13 +135,20 @@ export function modelToSerializableObj<T extends ModelBase>(
           // console.log('group', columns[key].group)
           // console.log('param.group', param.group)
         }
-        if (columns[key].group?.indexOf(params.group as string) === -1) {
+        if (columns[key].group?.indexOf(params.group) === -1) {
           // console.log('delete', columns[key].group, param.group)
           delete dto[serializeName]
         }
       } else if (typeof params.excludeGroup !== 'undefined') {
-        if (columns[key].group && columns[key].group?.indexOf(params.excludeGroup as string) !== -1) {
-          // console.log('delete', columns[key].group, param.group)
+        if (
+          typeof params.excludeGroup === 'string' &&
+          columns[key].group?.indexOf?.(params.excludeGroup) !== -1
+        ) {
+          delete dto[serializeName]
+        } else if (
+          Array.isArray(params.excludeGroup) &&
+          params.excludeGroup.some((group) => columns[key].group?.indexOf?.(group) !== -1)
+        ) {
           delete dto[serializeName]
         }
       }
