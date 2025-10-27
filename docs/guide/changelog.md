@@ -12,6 +12,12 @@ permalink: /guide/changelog/
 [//]: # '#### Breaking Change'
 [//]: # '#### Remove'
 
+## 1.0.12
+
+## @model-base/core
+#### fix 增加副作用判断，支持按需加载。
+
+
 ## 1.0.1
 
 ## @model-base/core
