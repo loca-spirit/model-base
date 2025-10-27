@@ -21,7 +21,9 @@
     "tslib": "^2.8.0"
   },
   "engineStrict": true,
-  "sideEffects": false,
+  "sideEffects": [
+    "lib/symbol-polyfill.js"
+  ],
   "files": [
     "dist",
     "es",
