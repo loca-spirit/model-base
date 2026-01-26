@@ -4,6 +4,7 @@
 import { __MODEL__, __MODEL_PROPS__, NAMING_STRATEGIES } from '../constant'
 import { IModelOptions, IModelProps } from '../decorator'
 import { ModelBase } from '../model/ModelBase'
+import { toRaw } from './toRaw'
 
 export class ModelOptions implements IModelOptions {
   constructor(options?: IModelOptions) {
@@ -45,10 +46,11 @@ const defaultModelOptions: IModelProps = {
  * @returns 属性值
  */
 export function getModelProps<T extends ModelBase>(t_: T, prop: keyof IModelProps, current?: IModelProps) {
+  const t__ = toRaw(t_)
   return (
     current?.[prop] ??
-    t_[__MODEL_PROPS__]?.[prop] ??
-    (t_.constructor as any)[__MODEL__]?.[prop] ??
+    t__[__MODEL_PROPS__]?.[prop] ??
+    (t__.constructor as any)[__MODEL__]?.[prop] ??
     defaultModelOptions[prop]
   )
 }

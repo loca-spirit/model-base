@@ -1,6 +1,6 @@
 {
   "name": "@model-base/service",
-  "version": "1.0.12",
+  "version": "1.0.14",
   "description": "loca boot service",
   "main": "lib/index.js",
   "module": "lib/index.js",
@@ -14,7 +14,7 @@
   ],
   "author": "",
   "dependencies": {
-    "@model-base/core": "^1.0.12",
+    "@model-base/core": "^1.0.14",
     "patch-package": "^6.4.7",
     "tslib": "^2.8.0"
   },
@@ -28,5 +28,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "gitHead": "aded529ed035afd303d8307bad56fe471d756be1"
+  "gitHead": "b34455a7fcbf89bc8f28be3956ded76bca9b4acd"
 }

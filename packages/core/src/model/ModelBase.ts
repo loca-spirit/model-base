@@ -20,8 +20,8 @@ function callMethod(
     camelCase?: boolean
   },
 ) {
-  const columns = this_.getColumnsCached() as { [key: string]: IColumnInner }
-  const target = this_ as any
+  const target = toRaw(this_)
+  const columns = target.getColumnsCached() as { [key: string]: IColumnInner }
   const modelOptions: IDataModel = (target.constructor as any)[__MODEL__] || {}
   modelOptions.methods = modelOptions.methods || {}
   for (const key in columns) {
