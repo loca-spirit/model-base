@@ -16,6 +16,8 @@ export function getChange(
     descriptor?: boolean
     clean?: CLEAN_ENUM
     ignoreEmptyString?: boolean
+    ignoreEmpty?: boolean
+    enableEmptyValue?: boolean
     camelCase?: boolean
   },
 ) {
@@ -46,6 +48,7 @@ export function getChange(
   }
   Object.keys(columns).forEach((columnName) => {
     let orgColumn = columns[columnName].name
+    const emptyValue = columns[columnName].emptyValue
     if (sns === NAMING_STRATEGIES.camelCase) {
       orgColumn = columns[columnName].camelCaseName
     }
@@ -58,15 +61,23 @@ export function getChange(
       oldValue = (oldValue as string).trim()
     }
     // 处理删除的数据，对删除数据进行格式化，满足不同的需求
-    if (
-      ((params.clean === CLEAN_ENUM.CLEAN_DIRTY && currentValue === void 0) ||
-        (params.clean === CLEAN_ENUM.CLEAN_UNDEFINED_AND_NULL && currentValue === void 0) ||
-        currentValue === null ||
-        (params.clean === CLEAN_ENUM.CLEAN_UNDEFINED && currentValue === void 0) ||
-        currentValue === null ||
-        currentValue === '') &&
-      oldValue !== currentValue
-    ) {
+    const isUndefined = currentValue === void 0
+    const isNull = currentValue === null
+    const isEmptyString = typeof currentValue === 'string' && currentValue.replace(/\s/g, '') === ''
+    const isEmptyArray = Array.isArray(currentValue) && currentValue.length === 0
+    const isEmptyObject = isPlainObject(currentValue) && Object.keys(currentValue).length === 0
+    let isEmpty = isUndefined || isNull || isEmptyString || isEmptyArray || isEmptyObject
+    if (params.clean === CLEAN_ENUM.CLEAN_UNDEFINED) {
+      isEmpty = isUndefined
+    } else if (params.clean === CLEAN_ENUM.CLEAN_UNDEFINED_AND_NULL) {
+      isEmpty = isUndefined || isNull
+    } else if (params.clean === CLEAN_ENUM.CLEAN_DIRTY) {
+      isEmpty = isUndefined || isNull || isEmptyString || isEmptyArray || isEmptyObject
+    }
+    if (isEmpty && typeof emptyValue !== 'undefined' && params?.enableEmptyValue === true) {
+      currentValue = emptyValue
+    }
+    if (isEmpty && JSON.stringify(oldValue) !== JSON.stringify(currentValue)) {
       changedObj[orgColumn] = currentValue
       descriptorObj[columnName] = {
         dataKey: orgColumn,
@@ -79,9 +90,11 @@ export function getChange(
           update: currentValue,
         },
       }
-    } else if (oldValue === void 0 && oldValue !== currentValue) {
+    } else if (oldValue === void 0 && JSON.stringify(oldValue) !== JSON.stringify(currentValue)) {
       if (params?.ignoreEmptyString && typeof currentValue === 'string' && currentValue === '') {
-        // 这种情况不处理
+        // 这种情况不处理，认为是无变化。
+      } else if (params?.ignoreEmpty && isEmpty) {
+        // 这种情况不处理，认为是无变化。
       } else {
         // 处理新增的数据
         changedObj[orgColumn] = currentValue

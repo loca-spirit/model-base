@@ -111,6 +111,7 @@ function initColumn<T>(target: any, property_: string | symbol, columns_: any, p
     trim: params_.trim,
     primary: params_.primary,
     foreign: params_.foreign,
+    emptyValue: params_.emptyValue,
     default: params_.default,
     autowired: params_.autowired,
     formatter: params_.formatter,

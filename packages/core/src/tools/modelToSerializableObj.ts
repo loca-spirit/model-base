@@ -5,27 +5,27 @@ import { NAMING_STRATEGIES } from '../constant'
 import { CLEAN_ENUM, IColumnSerialize, type IColumnInner, type TSerializableParam } from '../decorator/types'
 import { type ModelBase } from '../model/ModelBase'
 
-function cleanDirty(this_: any, key: string, dto: { [index: string]: any }, columnName: string, value: any) {
-  const target = this_ as any
-  // 默认null或者undefined的字段会包含在返回的对象中，如果需要返回对象不返回null、空和undefined的值，调用方法时传 'cleanDirty'
-  if (typeof target[key] === 'string') {
-    if (target[key].replace(/\s/g, '') !== '') {
-      dto[columnName] = value
-    }
-  } else if (isPlainObject(target[key])) {
-    if (Object.keys(target[key]).length !== 0) {
-      dto[columnName] = value
-    }
-  } else if (Array.isArray(target[key])) {
-    if (target[key].length !== 0) {
-      dto[columnName] = value
-    }
-  } else {
-    if (typeof target[key] !== 'undefined' && target[key] !== null) {
-      dto[columnName] = value
-    }
-  }
-}
+// function cleanDirty(this_: any, key: string, dto: { [index: string]: any }, columnName: string, value: any) {
+//   const target = this_ as any
+//   // 默认null或者undefined的字段会包含在返回的对象中，如果需要返回对象不返回null、空和undefined的值，调用方法时传 'cleanDirty'
+//   if (typeof target[key] === 'string') {
+//     if (target[key].replace(/\s/g, '') !== '') {
+//       dto[columnName] = value
+//     }
+//   } else if (isPlainObject(target[key])) {
+//     if (Object.keys(target[key]).length !== 0) {
+//       dto[columnName] = value
+//     }
+//   } else if (Array.isArray(target[key])) {
+//     if (target[key].length !== 0) {
+//       dto[columnName] = value
+//     }
+//   } else {
+//     if (typeof target[key] !== 'undefined' && target[key] !== null) {
+//       dto[columnName] = value
+//     }
+//   }
+// }
 /**
  *
  * 如果 removeUndefinedAndNullValue 设置为 true，则 undefined 和 null 的值是获取不到的，
@@ -51,41 +51,52 @@ export function modelToSerializableObj<T extends ModelBase>(
   const target = this_ as T
   for (const key in columns) {
     if (columns.hasOwnProperty(key)) {
+      const value = target[key] as any
+      const isUndefined = value === void 0
+      const isNull = value === null
+      const isEmptyString = typeof value === 'string' && value.replace(/\s/g, '') === ''
+      const isEmptyArray = Array.isArray(value) && value.length === 0
+      const isEmptyObject = isPlainObject(value) && Object.keys(value).length === 0
+      let isEmpty = isUndefined || isNull || isEmptyString || isEmptyArray || isEmptyObject
+      if (params.clean === CLEAN_ENUM.CLEAN_UNDEFINED) {
+        isEmpty = isUndefined
+      } else if (params.clean === CLEAN_ENUM.CLEAN_UNDEFINED_AND_NULL) {
+        isEmpty = isUndefined || isNull
+      } else if (params.clean === CLEAN_ENUM.CLEAN_DIRTY) {
+        isEmpty = isUndefined || isNull || isEmptyString || isEmptyArray || isEmptyObject
+      }
       const serializeName = getColumnSerializeName(columns[key], sns)
+      const emptyValue = columns[key].emptyValue
       if (columns[key].childType) {
         // 如果原始数据中没有这个字段，则不存入saveData
-        if (target[key]) {
-          if (Array.isArray(target[key])) {
+        if (value) {
+          if (Array.isArray(value)) {
             dto[serializeName] = []
-            target[key].forEach((m: any) => {
+            value.forEach((m: any) => {
               dto[serializeName].push(modelToSerializableObj(m, params))
             })
-            if (params.clean === CLEAN_ENUM.CLEAN_DIRTY) {
-              if (dto[serializeName] && dto[serializeName].length === 0) {
-                delete dto[serializeName]
-              }
-            }
           } else {
             if (columns[key].type === 'record') {
-              Object.keys(target[key] || {}).forEach((k) => {
+              Object.keys(value || {}).forEach((k) => {
                 dto[serializeName] = dto[serializeName] || {}
                 dto[serializeName][k] = modelToSerializableObj(target[key][k], params)
               })
             } else if (columns[key].type === 'recordArray') {
-              Object.keys(target[key] || {}).forEach((k) => {
+              Object.keys(value || {}).forEach((k) => {
                 dto[serializeName] = dto[serializeName] || {}
-                target[key][k]?.forEach((m: any) => {
+                value[k]?.forEach((m: any) => {
                   dto[serializeName][k] = dto[serializeName][k] || []
                   dto[serializeName][k].push(modelToSerializableObj(m, params))
                 })
               })
             } else {
-              dto[serializeName] = modelToSerializableObj(target[key], params)
-              if (params.clean === CLEAN_ENUM.CLEAN_DIRTY) {
-                if (dto[serializeName] && Object.keys(dto[serializeName]).length === 0) {
-                  delete dto[serializeName]
-                }
-              }
+              dto[serializeName] = modelToSerializableObj(value, params)
+            }
+          }
+          if (isEmpty) {
+            delete dto[serializeName]
+            if (typeof emptyValue !== 'undefined' && params?.enableEmptyValue === true) {
+              dto[serializeName] = emptyValue
             }
           }
         }
@@ -106,23 +117,31 @@ export function modelToSerializableObj<T extends ModelBase>(
           }
           value = serialize.apply(target, [paramsSerialize])
         }
-        if (params.clean === CLEAN_ENUM.CLEAN_DIRTY) {
-          cleanDirty(this_, key, dto, serializeName, value)
-        } else if (params.clean === CLEAN_ENUM.CLEAN_UNDEFINED) {
-          // 默认null或者undefined的字段会包含在返回的对象中，如果需要返回对象不返回null和undefined的值，调用方法时传true
-          if (typeof target[key] !== 'undefined') {
-            dto[serializeName] = value
-          }
-        } else if (params.clean === CLEAN_ENUM.CLEAN_UNDEFINED_AND_NULL) {
-          // 默认null或者undefined的字段会包含在返回的对象中，如果需要返回对象不返回null和undefined的值，调用方法时传true
-          if (typeof target[key] !== 'undefined' && target[key] !== null) {
-            dto[serializeName] = value
+
+        // if (params.clean === CLEAN_ENUM.CLEAN_DIRTY) {
+        //   cleanDirty(this_, key, dto, serializeName, value)
+        // } else if (params.clean === CLEAN_ENUM.CLEAN_UNDEFINED) {
+        //   // 默认null或者undefined的字段会包含在返回的对象中，如果需要返回对象不返回null和undefined的值，调用方法时传true
+        //   if (typeof target[key] !== 'undefined') {
+        //     dto[serializeName] = value
+        //   }
+        // } else if (params.clean === CLEAN_ENUM.CLEAN_UNDEFINED_AND_NULL) {
+        //   // 默认null或者undefined的字段会包含在返回的对象中，如果需要返回对象不返回null和undefined的值，调用方法时传true
+        //   if (typeof target[key] !== 'undefined' && target[key] !== null) {
+        //     dto[serializeName] = value
+        //   }
+        // } else {
+        //   dto[serializeName] = value
+        // }
+        if (columns[key].trim && params.trim && typeof value === 'string') {
+          value = (value as string).trim()
+        }
+        if (isEmpty) {
+          if (typeof emptyValue !== 'undefined' && params?.enableEmptyValue === true) {
+            dto[serializeName] = emptyValue
           }
         } else {
           dto[serializeName] = value
-        }
-        if (columns[key].trim && params.trim && typeof dto[serializeName] === 'string') {
-          dto[serializeName] = (dto[serializeName] as string).trim()
         }
       }
       // todo 后续可以再兼容group是数组的情况
@@ -142,12 +161,13 @@ export function modelToSerializableObj<T extends ModelBase>(
       } else if (typeof params.excludeGroup !== 'undefined') {
         if (
           typeof params.excludeGroup === 'string' &&
-          columns[key].group && columns[key].group?.indexOf?.(params.excludeGroup) !== -1
+          columns[key].group &&
+          columns[key].group?.indexOf?.(params.excludeGroup) !== -1
         ) {
           delete dto[serializeName]
         } else if (
           Array.isArray(params.excludeGroup) &&
-          params.excludeGroup.some((group) =>  columns[key].group && columns[key].group?.indexOf?.(group) !== -1)
+          params.excludeGroup.some((group) => columns[key].group && columns[key].group?.indexOf?.(group) !== -1)
         ) {
           delete dto[serializeName]
         }

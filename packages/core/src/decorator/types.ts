@@ -20,12 +20,13 @@ export enum CLEAN_ENUM {
   CLEAN_UNDEFINED = 'cleanUndefined',
   // undefined or null
   CLEAN_UNDEFINED_AND_NULL = 'cleanUndefinedAndNull',
-  // undefined or null or '' or []
+  // undefined or null or '' or [] or {}
   CLEAN_DIRTY = 'cleanDirty',
 }
 
 export type TSerializableParam = {
-  clean: CLEAN_ENUM
+  clean?: CLEAN_ENUM
+  enableEmptyValue?: boolean
   group?: string
   excludeGroup?: string
   trim?: boolean
@@ -58,6 +59,7 @@ export type IColumnDeserialize<T = any> = {
 export interface IColumn<T = any> {
   name?: string // camelCase
   aliasName?: string // camelCase
+  emptyValue?: string // 序列化如果值为空，则设置为这个值。
   type?: any
   childType?: any
   group?: string | string[]
@@ -69,7 +71,7 @@ export interface IColumn<T = any> {
   foreign?: boolean
   strictNameCheck?: boolean
   strictAliasNameCheck?: boolean
-  default?: any | ((data: IColumnDefault<T>) => any)
+  default?: any | ((data: IColumnDefault<T>) => any) // 反序列化如果值为这个值，则设置为默认值。
   autowired?: boolean
   unformatter?: any
   deserialize?: (data: IColumnDeserialize<T>) => any
