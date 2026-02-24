@@ -429,6 +429,7 @@ export class ModelBase {
     clean?: CLEAN_ENUM
     descriptor?: boolean
     ignoreEmptyString?: boolean
+    enableEmptyValue?: boolean
   }) {
     const t_ = toRaw(this)
 
