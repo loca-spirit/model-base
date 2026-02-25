@@ -384,6 +384,7 @@ export class ModelBase {
     excludeGroup?: string
     clean?: CLEAN_ENUM
     camelCase?: boolean
+    enableEmptyValue?: boolean
   }) {
     const t_ = toRaw(this)
     return modelToSerializableObj(t_, {
@@ -392,6 +393,7 @@ export class ModelBase {
       excludeGroup: params?.excludeGroup,
       camelCase: params?.camelCase,
       trim: params && params.trim,
+      enableEmptyValue: params?.enableEmptyValue,
     })
   }
 
