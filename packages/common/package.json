@@ -1,6 +1,6 @@
 {
   "name": "@model-base/common",
-  "version": "1.0.17",
+  "version": "1.0.19",
   "description": "model-base common",
   "main": "lib/index.js",
   "module": "lib/index.js",

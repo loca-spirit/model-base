@@ -48,7 +48,8 @@ export function getChange(
   }
   Object.keys(columns).forEach((columnName) => {
     let orgColumn = columns[columnName].name
-    const emptyValue = columns[columnName].emptyValue
+    const emptyValueRaw = columns[columnName].emptyValue as string | (() => any)
+    const emptyValue = typeof emptyValueRaw === 'function' ? emptyValueRaw() : emptyValueRaw
     if (sns === NAMING_STRATEGIES.camelCase) {
       orgColumn = columns[columnName].camelCaseName
     }

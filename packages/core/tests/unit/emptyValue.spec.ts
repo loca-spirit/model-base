@@ -61,4 +61,13 @@ describe('emptyValue', () => {
 
     expect(c.getChangedData({ enableEmptyValue: true })).toEqual(expected)
   })
+
+  it('getSerializableObject message is null and list is empty', () => {
+    const expected = {
+      message: '',
+    }
+    const c = deserialize(ConsumerItem, {})
+
+    expect(c.getSerializableObject({ enableEmptyValue: true })).toEqual(expected)
+  })
 })

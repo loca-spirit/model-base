@@ -66,7 +66,8 @@ export function modelToSerializableObj<T extends ModelBase>(
         isEmpty = isUndefined || isNull || isEmptyString || isEmptyArray || isEmptyObject
       }
       const serializeName = getColumnSerializeName(columns[key], sns)
-      const emptyValue = columns[key].emptyValue
+      const emptyValueRaw = columns[key].emptyValue as string | (() => any)
+      const emptyValue = typeof emptyValueRaw === 'function' ? emptyValueRaw() : emptyValueRaw
       if (columns[key].childType) {
         // 如果原始数据中没有这个字段，则不存入saveData
         if (value) {
