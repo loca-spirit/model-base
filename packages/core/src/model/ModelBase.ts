@@ -437,7 +437,7 @@ export class ModelBase {
 
     const columns = (t_ as ModelBase).getColumns()
     const target = t_ as ModelBase
-    const targetData = t_.getSerializableObject(params)
+    const targetData = t_.getSerializableObject({ ...params, enableEmptyValue: false })
     return getChange(columns, target, targetData, {
       ...params,
       clean: params?.clean ?? CLEAN_ENUM.CLEAN_UNDEFINED_AND_NULL,

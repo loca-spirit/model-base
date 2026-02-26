@@ -75,37 +75,40 @@ export function getChange(
     } else if (params.clean === CLEAN_ENUM.CLEAN_DIRTY) {
       isEmpty = isUndefined || isNull || isEmptyString || isEmptyArray || isEmptyObject
     }
-    if (isEmpty && typeof emptyValue !== 'undefined' && params?.enableEmptyValue === true) {
-      currentValue = emptyValue
+    let currentValue_ = currentValue
+    const isChanged = JSON.stringify(oldValue) !== JSON.stringify(currentValue)
+    // 有变化的时候才去设置 emptyValue
+    if (isEmpty && isChanged && typeof emptyValue !== 'undefined' && params?.enableEmptyValue === true) {
+      currentValue_ = emptyValue
     }
-    if (isEmpty && JSON.stringify(oldValue) !== JSON.stringify(currentValue)) {
-      changedObj[orgColumn] = currentValue
+    if (isEmpty && isChanged) {
+      changedObj[orgColumn] = currentValue_
       descriptorObj[columnName] = {
         dataKey: orgColumn,
-        currentValue,
+        currentValue: currentValue_,
         oldValue,
         action: 'DELETE',
         changeDescriptor: {
           create: undefined,
           delete: oldValue,
-          update: currentValue,
+          update: currentValue_,
         },
       }
-    } else if (oldValue === void 0 && JSON.stringify(oldValue) !== JSON.stringify(currentValue)) {
+    } else if (oldValue === void 0 && isChanged) {
       if (params?.ignoreEmptyString && typeof currentValue === 'string' && currentValue === '') {
         // 这种情况不处理，认为是无变化。
       } else if (params?.ignoreEmpty && isEmpty) {
         // 这种情况不处理，认为是无变化。
       } else {
         // 处理新增的数据
-        changedObj[orgColumn] = currentValue
+        changedObj[orgColumn] = currentValue_
         descriptorObj[columnName] = {
           dataKey: orgColumn,
-          currentValue,
+          currentValue: currentValue_,
           oldValue,
           action: 'CREATE',
           changeDescriptor: {
-            create: currentValue,
+            create: currentValue_,
             delete: undefined,
             update: undefined,
           },
@@ -114,10 +117,8 @@ export function getChange(
     } else {
       // 处理变更的数据
       if (isPlainObject(oldValue)) {
-        const oldValueStr = JSON.stringify(oldValue)
-        const currentValueStr = JSON.stringify(currentValue)
-        if (oldValueStr !== currentValueStr) {
-          changedObj[orgColumn] = currentValue
+        if (isChanged) {
+          changedObj[orgColumn] = currentValue_
         }
         const insObj = target as any
         const insChild = insObj[columnName] as ModelBase
@@ -131,25 +132,23 @@ export function getChange(
           // primary value changed
           descriptorObj[columnName] = descriptorObj[columnName] || ({} as any)
           descriptorObj[columnName].primaryChangeDescriptor = {
-            create: currentValue,
+            create: currentValue_,
             delete: oldValue,
             update: undefined,
           } as any
         } else {
-          if (oldValueStr !== currentValueStr) {
+          if (isChanged) {
             descriptorObj[columnName] = descriptorObj[columnName] || ({} as any)
             descriptorObj[columnName].primaryChangeDescriptor = {
               create: undefined,
               delete: undefined,
-              update: currentValue,
+              update: currentValue_,
             } as any
           }
         }
       } else if (Array.isArray(oldValue)) {
-        const oldValueStr = JSON.stringify(oldValue)
-        const currentValueStr = JSON.stringify(currentValue)
-        if (oldValueStr !== currentValueStr) {
-          changedObj[orgColumn] = currentValue
+        if (isChanged) {
+          changedObj[orgColumn] = currentValue_
         }
         const childType = getModelType(columns[columnName].childType)
 
@@ -218,18 +217,18 @@ export function getChange(
           }
         }
       }
-      if (JSON.stringify(oldValue) !== JSON.stringify(currentValue)) {
-        changedObj[orgColumn] = currentValue
+      if (isChanged) {
+        changedObj[orgColumn] = currentValue_
         descriptorObj[columnName] = descriptorObj[columnName] || ({} as any)
         Object.assign(descriptorObj[columnName], {
           dataKey: orgColumn,
-          currentValue,
+          currentValue: currentValue_,
           oldValue,
         })
         descriptorObj[columnName].changeDescriptor = {
           // create: undefined,
           // delete: undefined,
-          update: currentValue,
+          update: currentValue_,
         }
         descriptorObj[columnName].action = 'UPDATE'
       }
