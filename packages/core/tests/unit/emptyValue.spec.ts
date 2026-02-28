@@ -58,6 +58,16 @@ describe('emptyValue', () => {
 
     expect(c.getChangedData({ enableEmptyValue: true })).toEqual(expected)
   })
+
+  it('getChangedData testMy is change', () => {
+    const expected = {
+      test_my: 'test1',
+    }
+    const c = deserialize(ConsumerItem, { message: 'test', testMy: 'test' })
+    c.testMy = 'test1'
+
+    expect(c.getChangedData({ enableEmptyValue: true })).toEqual(expected)
+  })
   it('getChangedData message is null ', () => {
     const expected = {
       message: '',
