@@ -1,6 +1,6 @@
 {
   "name": "@model-base/core",
-  "version": "1.0.21",
+  "version": "1.0.22",
   "description": "model-base core",
   "main": "lib/index.js",
   "module": "lib/index.js",
@@ -14,7 +14,7 @@
   ],
   "author": "",
   "dependencies": {
-    "@model-base/common": "^1.0.21",
+    "@model-base/common": "^1.0.22",
     "deepmerge": "^2.2.1",
     "lodash": "^4.17.21",
     "patch-package": "^6.4.7",
