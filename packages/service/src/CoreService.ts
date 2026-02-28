@@ -23,7 +23,7 @@ export interface IServiceParam<T, U> {
   params?: ModelBase | any
   options?: any
   beforeParse?: (dto: any) => any
-  beforeDeserialize?: (data: { json: any; snakeJson?: ModelSnakeType<T>; modelJson?: ModelType<T> }) => any
+  beforeDeserialize?: (data: any) => any
   afterParse?: (serviceResponse: T) => T
   afterDeserialize?: (serviceResponse: T) => T
   wrapper?: U
@@ -88,11 +88,7 @@ export class CoreService<T, R> {
         apiData = p.beforeParse(apiData)
       }
       if (p?.beforeDeserialize) {
-        p.beforeDeserialize({
-          json: apiData,
-          snakeJson: apiData,
-          modelJson: apiData,
-        })
+        apiData = p.beforeDeserialize(apiData)
       }
       let serviceResponse = (this.serviceResponseType as any).create(apiData, {}, p?.wrapper)
       if (p?.afterParse) {
