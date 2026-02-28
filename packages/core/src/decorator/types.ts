@@ -59,7 +59,7 @@ export type IColumnDeserialize<T = any> = {
 export interface IColumn<T = any> {
   name?: string // camelCase
   aliasName?: string // camelCase
-  emptyValue?: string // 序列化如果值为空，则设置为这个值。
+  emptyValue?: any // 序列化如果值为空，则设置为这个值。
   type?: any
   childType?: any
   group?: string | string[]
