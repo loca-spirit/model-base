@@ -1,3 +1,39 @@
+/**
+ * ModelBase - 模型基础类
+ *
+ * 所有数据模型的基类，提供以下核心功能：
+ *
+ * 1. **序列化/反序列化**：DTO ↔ 模型实例的双向转换
+ * 2. **变更追踪**：追踪模型数据变化，支持还原和获取变更
+ * 3. **嵌套模型**：支持复杂的嵌套对象和数组结构
+ * 4. **命名策略**：自动处理驼峰/蛇形命名转换
+ * 5. **分组过滤**：支持按分组选择性序列化
+ *
+ * @example
+ * ```typescript
+ * class User extends ModelBase {
+ *   @Column({ primary: true })
+ *   id: number
+ *
+ *   @Column()
+ *   userName: string
+ *
+ *   @Column({ model: Address })
+ *   address: Address
+ * }
+ *
+ * // 从 API 响应创建模型
+ * const user = User.create({ id: 1, user_name: 'John' })
+ *
+ * // 修改并获取变更
+ * user.userName = 'Jane'
+ * const changes = user.getChangedData() // { user_name: 'Jane' }
+ *
+ * // 序列化回 API 格式
+ * const dto = user.getSerializableObject()
+ * ```
+ */
+
 import merge from 'deepmerge'
 import { cloneDeep } from 'lodash'
 import { getChange } from '../_utils/ChangedModelUtil'
@@ -9,7 +45,11 @@ import { generateColumnsFromData } from '../decorator/Column'
 import { CLEAN_ENUM, IColumnInner, IDataModel, IModelOptions, ModelType } from '../decorator/types'
 import { modelToSerializableObj } from '../tools/modelToSerializableObj'
 
+/**
+ * 基于原始数据设置的选项
+ */
 export interface IDataByOriginalOption extends IModelOptions {
+  /** 是否保留原有的变更追踪基准点 */
   keepBackUp?: boolean
 }
 

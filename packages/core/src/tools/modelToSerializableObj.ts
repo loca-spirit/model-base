@@ -1,40 +1,43 @@
+/**
+ * 模型序列化工具
+ *
+ * 将模型实例转换为可序列化的普通对象（DTO）。
+ */
+
 import { cloneDeep, isPlainObject } from 'lodash'
-import { getColumnSerializeName } from '../_utils/getCollumnSerializeName'
+import { getColumnSerializeName } from '../_utils/getColumnSerializeName'
 import { getModelProps } from '../_utils/ModelBaseProps'
 import { NAMING_STRATEGIES } from '../constant'
 import { CLEAN_ENUM, IColumnSerialize, type IColumnInner, type TSerializableParam } from '../decorator/types'
 import { type ModelBase } from '../model/ModelBase'
 
-// function cleanDirty(this_: any, key: string, dto: { [index: string]: any }, columnName: string, value: any) {
-//   const target = this_ as any
-//   // 默认null或者undefined的字段会包含在返回的对象中，如果需要返回对象不返回null、空和undefined的值，调用方法时传 'cleanDirty'
-//   if (typeof target[key] === 'string') {
-//     if (target[key].replace(/\s/g, '') !== '') {
-//       dto[columnName] = value
-//     }
-//   } else if (isPlainObject(target[key])) {
-//     if (Object.keys(target[key]).length !== 0) {
-//       dto[columnName] = value
-//     }
-//   } else if (Array.isArray(target[key])) {
-//     if (target[key].length !== 0) {
-//       dto[columnName] = value
-//     }
-//   } else {
-//     if (typeof target[key] !== 'undefined' && target[key] !== null) {
-//       dto[columnName] = value
-//     }
-//   }
-// }
 /**
+ * 将模型实例转换为可序列化的对象
  *
- * 如果 removeUndefinedAndNullValue 设置为 true，则 undefined 和 null 的值是获取不到的，
- * 如果你设置了某个属性值为，''，这个属性是可以的值是可以获取到为 '' 的，如果你不想要这个属性的值，
- * 请设置这个属性为 undefined，或者删除掉这个属性的 key
+ * 核心序列化函数，处理：
+ * - 属性名转换（驼峰 ↔ 蛇形）
+ * - 空值清理（根据 clean 策略）
+ * - 嵌套模型递归序列化
+ * - 自定义序列化函数（serialize/unformatter）
+ * - 分组过滤
+ * - 字符串 trim 处理
  *
- * @param this_
- * @param param
- * @return { { [index: string]: any } }
+ * @typeParam T - 模型类型
+ * @param this_ - 模型实例
+ * @param params - 序列化参数
+ * @param params.clean - 空值清理策略
+ * @param params.group - 仅包含指定分组
+ * @param params.excludeGroup - 排除指定分组
+ * @param params.camelCase - 是否使用驼峰命名
+ * @param params.trim - 是否去除字符串首尾空格
+ * @param params.enableEmptyValue - 是否使用 emptyValue 替代空值
+ * @returns 序列化后的普通对象
+ *
+ * @example
+ * const dto = modelToSerializableObj(user, {
+ *   clean: CLEAN_ENUM.CLEAN_UNDEFINED_AND_NULL,
+ *   camelCase: false
+ * })
  */
 export function modelToSerializableObj<T extends ModelBase>(
   this_: T,
