@@ -1,9 +1,24 @@
+/**
+ * @Column 属性装饰器
+ *
+ * 用于标记模型属性并配置其序列化/反序列化行为。
+ * 支持 TypeScript 5.0 新版装饰器语法和旧版实验性装饰器语法。
+ */
+
 import { cloneDeep } from 'lodash'
 import { camelToSnake, snakeToCamel } from '../_utils/columnName'
 import { getModelProps } from '../_utils/ModelBaseProps'
 import { __COLUMNS__ } from '../constant'
 import { IColumn, IColumnInner } from './types'
 
+/**
+ * 根据值推断类型
+ *
+ * 用于 columnsInValue 模式下，从实际值推断属性类型。
+ *
+ * @param value - 属性值
+ * @returns 推断出的类型
+ */
 export function genTypeByValue(value: any) {
   let type = Object as any
   const typeOfValue = typeof value
@@ -22,6 +37,16 @@ export function genTypeByValue(value: any) {
   return type
 }
 
+/**
+ * 从数据对象生成列定义
+ *
+ * 用于 columnsInValue 模式下，自动从对象数据推断列配置。
+ * 适用于动态数据结构或无需显式定义列的场景。
+ *
+ * @param model - 模型实例
+ * @param data - 数据对象
+ * @returns 列配置映射
+ */
 export function generateColumnsFromData<T>(model: any, data: any) {
   const isColInVal = getModelProps(model, 'columnsInValue')
   const keepMn = getModelProps(model, 'keepModelName')
@@ -35,8 +60,7 @@ export function generateColumnsFromData<T>(model: any, data: any) {
         columns_[key] = {
           property: key,
           type: genTypeByValue((data as any)[key]),
-          // 正常column是从name上获取值，但是因为是通过value进行推断，所以没法传入name，只能全局设置，否则默认就是下划线的column。
-          name: keepMn ? key : camelToSnake(key), // serialized name
+          name: keepMn ? key : camelToSnake(key),
           camelCaseName: keepMn ? key : snakeToCamel(key),
         }
       })
@@ -166,54 +190,67 @@ interface ClassFieldDecoratorContext<This = unknown, Value = unknown> {
 
 declare type PropertyDecorator = (target: any, propertyKey: string | symbol | ClassFieldDecoratorContext) => void
 declare type PropertyDecoratorOld = (target: any, propertyKey: string | symbol) => void
-/**
- * @description 设置 primary 的主键的值只能是 string | number, 主键的值理论上不允许为空
- *
- * @description
- *
- * number serialized as Number
- * string serialized as String
- * boolean serialized as Boolean
- * any serialized as Object
- * void serializes as undefined
- * Array serialized as Array
- * If a Tuple, serialized as Array
- * If a class serialized it as the class constructor
- * If an Enum serialized it as Number
- * If has at least one call signature, serialized as Function
- * Otherwise serialized as Object (Including interfaces)
- *
- * @constructor
- * @param col
- */
 
+/**
+ * @Column 属性装饰器
+ *
+ * 标记模型属性并配置其序列化/反序列化行为。
+ * 支持 TypeScript 5.0+ 新版装饰器和旧版实验性装饰器。
+ *
+ * TypeScript 类型映射：
+ * - number → Number
+ * - string → String
+ * - boolean → Boolean
+ * - any → Object
+ * - void → undefined
+ * - Array → Array
+ * - Tuple → Array
+ * - class → 类构造函数
+ * - Enum → Number
+ * - 有调用签名 → Function
+ * - 其他（含 interface）→ Object
+ *
+ * @param col - 列配置选项
+ * @returns 属性装饰器
+ *
+ * @example
+ * ```typescript
+ * class User extends ModelBase {
+ *   @Column({ primary: true })
+ *   id: number
+ *
+ *   @Column({ name: 'user_name' })
+ *   userName: string
+ *
+ *   @Column({ model: Address })
+ *   address: Address
+ *
+ *   @Column({
+ *     deserialize: ({ value }) => new Date(value),
+ *     serialize: ({ value }) => value?.toISOString()
+ *   })
+ *   createdAt: Date
+ * }
+ * ```
+ */
 export function Column(col?: IColumn): PropertyDecorator {
   const params = col as IColumnInner
   return (target: any, context: string | symbol | ClassFieldDecoratorContext<typeof target, any>) => {
     if (target?.constructor) {
+      // 旧版装饰器语法（experimentalDecorators）
       const property = context as string | symbol
-      // 继承关系的时候，需要cloneDeep，否则会污染父类的columns
       const metadata = (target.constructor as any)[Symbol.metadata] || {}
       const columns = metadata[__COLUMNS__] || {}
+      // 继承关系时需要深拷贝，避免污染父类的 columns
       metadata[__COLUMNS__] = initColumn(target, property, cloneDeep(columns), params)
       ;(target.constructor as any)[Symbol.metadata] = metadata
     } else {
+      // 新版装饰器语法（TypeScript 5.0+）
       const property = (context as ClassFieldDecoratorContext<typeof target, any>).name
       const metadata = (context as any).metadata || {}
       const columns = metadata[__COLUMNS__] || {}
       metadata[__COLUMNS__] = initColumn(metadata, property, cloneDeep(columns), params)
       ;(context as any).metadata = metadata
-      // 新版本装饰器和旧版本统一，都不支持属性直接设置默认值。
-      // return function (this: any, value: any) {
-      //   if (typeof value === 'undefined' || typeof this[property] !== 'undefined') {
-      //     return this[property]
-      //   }
-      //   // 支持 User.create模式，将 默认值 value 放到 default 中统一处理。
-      //   if (!columns[property].default) {
-      //     columns[property].default = () => value
-      //   }
-      //   return value
-      // }
       return function (this: any, value: any) {
         return this[property]
       }
@@ -221,12 +258,20 @@ export function Column(col?: IColumn): PropertyDecorator {
   }
 }
 
+/**
+ * 列定义装饰器（仅支持旧版语法）
+ *
+ * 用于 dynamicModelBase 动态创建模型时的列定义。
+ * 与 @Column 功能相同，但仅支持旧版装饰器语法。
+ *
+ * @param col - 列配置选项
+ * @returns 属性装饰器
+ */
 export function ColumnDefine<T>(col?: IColumn<T>): PropertyDecoratorOld {
   return (target: any, property: string | symbol) => {
     const params = col as IColumnInner<T>
     const metadata = (target.constructor as any)[Symbol.metadata] || {}
     const columns = metadata[__COLUMNS__] || {}
-    // 初始化列
     const columns_ = initColumn<T>(target, property, columns, params)
     metadata[__COLUMNS__] = columns_
     ;(target.constructor as any)[Symbol.metadata] = metadata
