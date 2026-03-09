@@ -87,7 +87,7 @@ class Consumer extends ModelBase {
 }
 
 class ConsumerList extends ModelBase {
-  @Column({ model: Consumer})
+  @Column({ model: () => Consumer})
   public child: Consumer
 }
 ```
